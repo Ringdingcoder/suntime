@@ -96,10 +96,7 @@ class Sun:
         TO_RAD = math.pi/180.0
 
         # 1. first calculate the day of the year
-        N1 = math.floor(275 * month / 9)
-        N2 = math.floor((month + 9) / 12)
-        N3 = (1 + math.floor((year - 4 * math.floor(year / 4) + 2) / 3))
-        N = N1 - (N2 * N3) + day - 30
+        N = date.timetuple().tm_yday
 
         # 2. convert the longitude to hour value and calculate an approximate time
         lngHour = self._lon / 15
@@ -157,27 +154,7 @@ class Sun:
         UT = T - lngHour
         UT = self._force_range(UT, 24)   # UTC time in decimal format (e.g. 23.23)
 
-        #10. Return
-        hr = self._force_range(int(UT), 24)
-        min = round((UT - int(UT))*60, 0)
-        if min == 60:
-            hr += 1
-            min = 0
-
-        #10. check corner case https://github.com/SatAgro/suntime/issues/1
-        if hr == 24:
-            hr = 0
-            day += 1
-            
-            if day > calendar.monthrange(year, month)[1]:
-                day = 1
-                month += 1
-
-                if month > 12:
-                    month = 1
-                    year += 1
-
-        return datetime.datetime(year, month, day, hr, int(min), tzinfo=tz.tzutc())
+        return (datetime.datetime(year, month, day, tzinfo=tz.tzutc()) + datetime.timedelta(hours=UT)).replace(microsecond=0)
 
     @staticmethod
     def _force_range(v, max):
